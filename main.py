@@ -65,7 +65,7 @@ async def create_universe(ctx: ds.ApplicationContext, name: str, id: int, owner:
         (?, ?, ?, ?, ?)
         ''', (id, name, owner.id, channel.id, state,))
         connection.commit()
-        await wire_user_to_university(ctx, owner, id)
+        await wire_user_to_universe(ctx, owner, id)
         await ctx.respond('Вселенная успешно была создана')
     except Exception as error:
         print(error.with_traceback(error.__traceback__))
@@ -162,7 +162,7 @@ async def register_user_data(ctx: ds.ApplicationContext, user: ds.Member, univ_i
 
 @bot.slash_command(guild_ids=config['GUILDS'], desctiption='Привязывает человека к вселенной')
 @commands.has_permissions(administrator=True)
-async def wire_user_to_university(ctx: ds.ApplicationContext, user: ds.Member, univ_id: int):
+async def wire_user_to_universe(ctx: ds.ApplicationContext, user: ds.Member, univ_id: int):
     global connection
     try:
         cursor = connection.cursor()
@@ -185,6 +185,36 @@ async def wire_user_to_university(ctx: ds.ApplicationContext, user: ds.Member, u
                 cursor.close()
                 return
         await ctx.respond('Невозможно зарегистрировать более 3-х вселенных на одного человека')
+    except Exception as error:
+        print(error.with_traceback(error.__traceback__))
+        await ctx.respond('Произошла ошибка')
+    finally:
+        cursor.close()
+
+
+@bot.slash_command(guild_ids=config['GUILDS'], desctiption='Привязывает человека к вселенной')
+@commands.has_permissions(administrator=True)
+async def unwire_user_from_universe(ctx: ds.ApplicationContext, user: ds.Member, univ_id: int):
+    global connection
+    try:
+        cursor = connection.cursor()
+        cursor.execute('''
+        SELECT id, univ_id_main, univ_id_add_1, univ_id_add_2 FROM Users WHERE id = ?
+        ''', (user.id,))
+        connection.commit()
+        data = cursor.fetchone()
+        if not data:
+            await register_user_data(ctx, user)
+            cursor.close()
+            return
+        keys = ['univ_id_main', 'univ_id_add_1', 'univ_id_add_2']
+        for i in range(1, len(data)):
+            if data[i] == univ_id:
+                cursor.execute(f'''
+                UPDATE Users SET {keys[i - 1]} = 0 WHERE id = ?
+                ''', (user.id,))
+                connection.commit()
+        await ctx.respond('Успешно отвязан от вселенной')
     except Exception as error:
         print(error.with_traceback(error.__traceback__))
         await ctx.respond('Произошла ошибка')

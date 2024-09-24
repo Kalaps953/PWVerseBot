@@ -4,8 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ab1df00e-1d44-4137-bd55-f32bfb770f2c" name="Changes" comment="Added ability to simply wire people to universities, create, delete. Need to add lists commands">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    <list default="true" id="ab1df00e-1d44-4137-bd55-f32bfb770f2c" name="Changes" comment="Added list command with various args. Need to add count of dobryak strike and auto-changing of nicknames">
       <change beforePath="$PROJECT_DIR$/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/config.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/database.db" beforeDir="false" afterPath="$PROJECT_DIR$/database.db" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
@@ -136,13 +135,22 @@
       <option name="project" value="LOCAL" />
       <updated>1727169480875</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Added list command with various args. Need to add count of dobryak strike and auto-changing of nicknames">
+      <option name="closed" value="true" />
+      <created>1727178997665</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1727178997665</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Did first variant, no tests" />
     <MESSAGE value="Working prototype, need to add ability to add universes via command" />
     <MESSAGE value="Added ability to simply wire people to universities, create, delete. Need to add lists commands" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added ability to simply wire people to universities, create, delete. Need to add lists commands" />
+    <MESSAGE value="Added list command with various args. Need to add count of dobryak strike and auto-changing of nicknames" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added list command with various args. Need to add count of dobryak strike and auto-changing of nicknames" />
   </component>
 </project>
