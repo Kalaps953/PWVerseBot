@@ -5,17 +5,16 @@ import discord as ds
 import discord.ext.commands as commands
 import json
 
-
 with open('config.json') as f:
     config = json.load(f)
 
-
-bot = ds.Bot()
+intents = ds.Intents.all()
+bot = ds.Bot(intents=intents)
 
 
 @bot.event
 async def on_ready():
-    global connection
+    global connection, ignore_next, dobryak
     print('Bot logged')
     connection = sqlite3.connect('database.db')
     cursor = connection.cursor()
@@ -44,17 +43,20 @@ async def on_ready():
         last_date TEXT
     )
     ''')
+    ignore_next = False
+    dobryak = 0
     connection.commit()
     cursor.close()
 
 
-@bot.slash_command(guild_ids=config['GUILDS'], description='Добавляет вселенную в базу данных и привязывает человека к ней')
+@bot.slash_command(guild_ids=config['GUILDS'],
+                   description='Добавляет вселенную в базу данных и привязывает человека к ней')
 @commands.has_permissions(administrator=True)
 async def create_universe(ctx: ds.ApplicationContext, name: str, id: int, owner: ds.Member, channel: ds.TextChannel,
                           state: ds.Option(int, choices=[
-                            ds.OptionChoice('в процессе', -1),
-                            ds.OptionChoice('в криокамере', 1),
-                            ds.OptionChoice('готова', 2)])):
+                              ds.OptionChoice('в процессе', -1),
+                              ds.OptionChoice('в криокамере', 1),
+                              ds.OptionChoice('готова', 2)])):
     global connection
     try:
         cursor = connection.cursor()
@@ -122,7 +124,8 @@ async def delete_universe(ctx: ds.ApplicationContext, id: int):
 
 @bot.slash_command(guild_ids=config['GUILDS'], desctiption='Добавляет человека в базу данных')
 @commands.has_permissions(administrator=True)
-async def register_user_data(ctx: ds.ApplicationContext, user: ds.Member, univ_id_main: int = None, univ_id_1: int = None, univ_id_2: int = None):
+async def register_user_data(ctx: ds.ApplicationContext, user: ds.Member, univ_id_main: int = None,
+                             univ_id_1: int = None, univ_id_2: int = None):
     global connection
     try:
         cursor = connection.cursor()
@@ -142,7 +145,8 @@ async def register_user_data(ctx: ds.ApplicationContext, user: ds.Member, univ_i
             cursor_checker.close()
             return True
 
-        if not await check_if_exists(univ_id_main) or not await check_if_exists(univ_id_1) or not await check_if_exists(univ_id_2):
+        if not await check_if_exists(univ_id_main) or not await check_if_exists(univ_id_1) or not await check_if_exists(
+                univ_id_2):
             return
 
         cursor.execute('''
@@ -222,7 +226,8 @@ async def unwire_user_from_universe(ctx: ds.ApplicationContext, user: ds.Member,
         cursor.close()
 
 
-@bot.slash_command(guild_ids=config['GUILDS'], description='Пишет все вселенные с привязанными к ним каналами и владельцами')
+@bot.slash_command(guild_ids=config['GUILDS'],
+                   description='Пишет все вселенные с привязанными к ним каналами и владельцами')
 async def get_universes(ctx: ds.ApplicationContext,
                         user: ds.Member = None,
                         state: ds.Option(int, choices=[
@@ -268,7 +273,8 @@ async def get_universes(ctx: ds.ApplicationContext,
             embed = ds.Embed(
                 title=title,
                 description=f'<#{univ[3]}>'
-            ).set_author(name=ctx.guild.get_member(univ[2]).name, icon_url=ctx.guild.get_member(univ[2]).display_avatar.url)
+            ).set_author(name=ctx.guild.get_member(univ[2]).name,
+                         icon_url=ctx.guild.get_member(univ[2]).display_avatar.url)
             if i == 0:
                 await ctx.respond(embed=embed)
             else:
@@ -284,39 +290,62 @@ async def get_universes(ctx: ds.ApplicationContext,
 
 @bot.event
 async def on_message(message: ds.Message):
-    global connection
+    global connection, dobryak
     if message.author.id == 1018952778191745074:
         await message.add_reaction('🔥')
-    if message.channel.id == 1283033501456666634:
-        if message.content != ':dobryak:':
-            try:
-                cursor = connection.cursor()
-                cursor.execute('''
-                SELECT univ_id_main, univ_id_add_1, univ_id_add_2 FROM Users WHERE id = ?
-                ''', (message.author.id,))
-                connection.commit()
-                if data := cursor.fetchone():
-                    for i in data:
-                        cursor.execute('''
-                        SELECT days, channel_id, last_date FROM EverydayKauchook WHERE channel_id = ?
-                        ''', (i,))
-                        connection.commit()
-                        if kauchook_data := cursor.fetchone():
-                            cursor.execute('''
-                            UPDATE EverydayKauchook SET days = ? WHERE channel_id = ?
-                            ''', (kauchook_data[0] + random.randint(0, 3), i,))
-                            connection.commit()
-                            continue
-                        cursor.execute('''
-                        INSERT INTO EverydayKauchook
-                        (days, channel_id, last_date)
-                        VALUES
-                        (?, ?, ?)
-                        ''', (random.randint(0, 3), i, datetime.date.strftime(datetime.date.today(), '%d.%m'),))
-            except Exception as error:
-                print('Не получилось(')
-            finally:
-                cursor.close()
+    if message.channel.id in config['DOBRYAK']:
+        emojis = [['0️⃣', '⭕'], ['1️⃣', '🇮', '🕐'], ['2️⃣', '🥈'], ['3️⃣', '🥉'], ['4️⃣', '🍀'], ['5️⃣', '✋'], ['6️⃣', '🕕'], ['7️⃣', '🕖'], ['8️⃣', '🎱'], ['9️⃣', '🕘']]
+
+        def num_to_emoji(num):
+            used = []
+            result = []
+            for i in range(10):
+                used.append(0)
+            for i in str(num):
+                i = int(i)
+                result.append(emojis[i][used[i]])
+                used[i] += 1
+            return result
+
+        def emoji_to_num(emoji: list[ds.Reaction]):
+            result = ''
+            for i in emoji:
+                for j in range(len(emojis)):
+                    if i.emoji in emojis[j]:
+                        result += str(j)
+            return int(result)
+        history = await message.channel.history(limit=4).flatten()
+        if message.content == '<:dobryak:1276304647497449523>' and not message.author.bot:
+            if history[1].content != '<:dobryak:1276304647497449523>' and not history[1].author.bot:
+                await message.add_reaction('1️⃣')
+                dobryak = 1
+            elif history[1].author.bot:
+                if history[3].content != '<:dobryak:1276304647497449523>':
+                    await message.add_reaction('1️⃣')
+                    dobryak = 1
+            else:
+                dobryak += 1
+                reactions = num_to_emoji(dobryak)
+                for i in reactions:
+                    await message.add_reaction(i)
+        else:
+            if history[1].content == '<:dobryak:1276304647497449523>':
+                r = random.randint(1, 3)
+                if r == 1:
+                    await message.reply('https://media.discordapp.net/attachments/1283033501456666634/1288229715697598635/f52e9ab170c301e8.png?ex=66f515aa&is=66f3c42a&hm=f51861245951ad7ee29b06ba70acce4c8c538e13865b1dc88b4921eb411d4b72&=&format=webp&quality=lossless&width=350&height=350')
+                elif r == 2:
+                    await message.reply('https://media.discordapp.net/attachments/1283033501456666634/1287035125057458226/9_20240920220017.png?ex=66f55a5d&is=66f408dd&hm=ce5fa1bdf36e023fbdf25c2acdc955d5ae04ac709fc0da8833420deb52db6140&=&format=webp&quality=lossless&width=550&height=309')
+                else:
+                    await message.reply('https://cdn.discordapp.com/attachments/1283033501456666634/1285574066073374741/2024-09-10-17-22-26.mp4?ex=66f54fa6&is=66f3fe26&hm=8603267df98ab9d1174c6f6c309621d895ae8eea421800c7289514f851994542&')
+                await message.reply('# Страйк УКРАЛИ на числе ' + str(dobryak))
+                dobryak = 0
+    elif message.channel.id in config['MEMES']:
+        if message.attachments:
+            await message.create_thread(name='Обсуждение')
+            await message.add_reaction('👍')
+            await message.add_reaction('👎')
+        else:
+            await message.delete()
 
 
 @bot.event
@@ -341,6 +370,26 @@ async def on_member_join(member: ds.Member):
         print('Добавление человека в датабазу неуспешно')
     finally:
         cursor.close()
+
+
+@bot.event
+async def on_member_update(before: ds.Member, after: ds.Member):
+    global connection, ignore_next
+    if before.nick != after.nick and not ignore_next:
+        cursor = connection.cursor()
+        cursor.execute('''
+        SELECT id, univ_id_main, univ_id_add_1, univ_id_add_2 FROM Users WHERE id = ?
+        ''', (after.id,))
+        connection.commit()
+        data = cursor.fetchone()
+        nick = after.nick
+        for i in range(1, len(data)):
+            if data[i]:
+                nick += f'-[{data[i]}]'
+        ignore_next = True
+        await after.edit(nick=nick)
+    if ignore_next:
+        ignore_next = False
 
 
 bot.run(config['TOKEN'])
