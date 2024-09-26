@@ -1,15 +1,42 @@
-import datetime
 import random
 import sqlite3
 import discord as ds
 import discord.ext.commands as commands
 import json
 
-with open('config.json') as f:
-    config = json.load(f)
+
+def reload_config():
+    global config
+    with open('config.json') as f:
+        config = json.load(f)
+
+
+reload_config()
 
 intents = ds.Intents.all()
 bot = ds.Bot(intents=intents)
+
+
+@bot.slash_command(guild_ids=config['GUILDS'], desctiption='Привязывает человека к вселенной')
+@commands.has_permissions(administrator=True)
+async def config_change(ctx: ds.ApplicationContext, dobryak_enabled: bool = None, admin_reactions_enabled: bool = None,
+                 fire_enabled: bool = None, enter_exit_reactions: bool = None):
+    names = ['Добряк-страйк', 'Реакция :BASED:', 'Поджиг эчпочмака', 'Реакции захода/ухода']
+    keys = ['DOBRYAK-ENABLED', 'ADMIN-REACTIONS-ENABLED', 'FIRE-ENABLED', 'ENTER-EXIT-REACTIONS']
+    if dobryak_enabled is not None:
+        config[keys[0]] = dobryak_enabled
+    if admin_reactions_enabled is not None:
+        config[keys[1]] = admin_reactions_enabled
+    if fire_enabled is not None:
+        config[keys[2]] = fire_enabled
+    if enter_exit_reactions is not None:
+        config[keys[3]] = enter_exit_reactions
+    embed = ds.Embed(title='Новые/текущие настройки:')
+    for i in range(len(keys)):
+        embed.add_field(name=names[i], value='✅' if config[keys[i]] else '❌', inline=True)
+    await ctx.respond(embed=embed)
+    with open('config.json', mode='w') as f:
+        f.write(json.dumps(config, indent=4))
 
 
 @bot.event
@@ -49,8 +76,7 @@ async def on_ready():
     cursor.close()
 
 
-@bot.slash_command(guild_ids=config['GUILDS'],
-                   description='Добавляет вселенную в базу данных и привязывает человека к ней')
+@bot.slash_command(guild_ids=config['GUILDS'], description='Добавляет вселенную в базу данных и привязывает человека к ней')
 @commands.has_permissions(administrator=True)
 async def create_universe(ctx: ds.ApplicationContext, name: str, id: int, owner: ds.Member, channel: ds.TextChannel,
                           state: ds.Option(int, choices=[
@@ -291,10 +317,13 @@ async def get_universes(ctx: ds.ApplicationContext,
 @bot.event
 async def on_message(message: ds.Message):
     global connection, dobryak
-    if message.author.id == 1018952778191745074:
-        await message.add_reaction('🔥')
-    if message.channel.id in config['DOBRYAK']:
-        emojis = [['0️⃣', '⭕'], ['1️⃣', '🇮', '🕐'], ['2️⃣', '🥈'], ['3️⃣', '🥉'], ['4️⃣', '🍀'], ['5️⃣', '✋'], ['6️⃣', '🕕'], ['7️⃣', '🕖'], ['8️⃣', '🎱'], ['9️⃣', '🕘']]
+    if message.channel.id == 1276452159495340086 and config['ENTER-EXIT-REACTIONS-ENABLED']:
+        await message.add_reaction('<:SAJ:1276288176780218460>')
+    elif message.channel.id == 1276219202272886935 and config['ENTER-EXIT-REACTIONS-ENABLED']:
+        await message.add_reaction('<:nyehehe:1276290044470104137>')
+    if message.channel.id in config['DOBRYAK'] and config['DOBRYAK-ENABLED']:
+        emojis = [['0️⃣', '⭕'], ['1️⃣', '🇮', '🕐'], ['2️⃣', '🥈'], ['3️⃣', '🥉'], ['4️⃣', '🍀'], ['5️⃣', '✋'], ['6️⃣', '🕕'],
+                  ['7️⃣', '🕖'], ['8️⃣', '🎱'], ['9️⃣', '🕘']]
 
         def num_to_emoji(num):
             used = []
@@ -307,20 +336,13 @@ async def on_message(message: ds.Message):
                 used[i] += 1
             return result
 
-        def emoji_to_num(emoji: list[ds.Reaction]):
-            result = ''
-            for i in emoji:
-                for j in range(len(emojis)):
-                    if i.emoji in emojis[j]:
-                        result += str(j)
-            return int(result)
         history = await message.channel.history(limit=4).flatten()
         if message.content == '<:dobryak:1276304647497449523>' and not message.author.bot:
             if history[1].content != '<:dobryak:1276304647497449523>' and not history[1].author.bot:
                 await message.add_reaction('1️⃣')
                 dobryak = 1
             elif history[1].author.bot:
-                if history[3].content != '<:dobryak:1276304647497449523>':
+                if history[2].content != '<:dobryak:1276304647497449523>':
                     await message.add_reaction('1️⃣')
                     dobryak = 1
             else:
@@ -331,21 +353,26 @@ async def on_message(message: ds.Message):
         else:
             if history[1].content == '<:dobryak:1276304647497449523>':
                 r = random.randint(1, 3)
+                content = ''
                 if r == 1:
-                    await message.reply('https://media.discordapp.net/attachments/1283033501456666634/1288229715697598635/f52e9ab170c301e8.png?ex=66f515aa&is=66f3c42a&hm=f51861245951ad7ee29b06ba70acce4c8c538e13865b1dc88b4921eb411d4b72&=&format=webp&quality=lossless&width=350&height=350')
+                    content += 'https://media.discordapp.net/attachments/1283033501456666634/1288229715697598635/f52e9ab170c301e8.png?ex=66f515aa&is=66f3c42a&hm=f51861245951ad7ee29b06ba70acce4c8c538e13865b1dc88b4921eb411d4b72&=&format=webp&quality=lossless&width=350&height=350'
                 elif r == 2:
-                    await message.reply('https://media.discordapp.net/attachments/1283033501456666634/1287035125057458226/9_20240920220017.png?ex=66f55a5d&is=66f408dd&hm=ce5fa1bdf36e023fbdf25c2acdc955d5ae04ac709fc0da8833420deb52db6140&=&format=webp&quality=lossless&width=550&height=309')
+                    content += 'https://media.discordapp.net/attachments/1283033501456666634/1287035125057458226/9_20240920220017.png?ex=66f55a5d&is=66f408dd&hm=ce5fa1bdf36e023fbdf25c2acdc955d5ae04ac709fc0da8833420deb52db6140&=&format=webp&quality=lossless&width=550&height=309'
                 else:
-                    await message.reply('https://cdn.discordapp.com/attachments/1283033501456666634/1285574066073374741/2024-09-10-17-22-26.mp4?ex=66f54fa6&is=66f3fe26&hm=8603267df98ab9d1174c6f6c309621d895ae8eea421800c7289514f851994542&')
-                await message.reply('# Страйк УКРАЛИ на числе ' + str(dobryak))
+                    content += 'https://cdn.discordapp.com/attachments/1283033501456666634/1285574066073374741/2024-09-10-17-22-26.mp4?ex=66f54fa6&is=66f3fe26&hm=8603267df98ab9d1174c6f6c309621d895ae8eea421800c7289514f851994542&'
+                await message.channel.send('# Страйк УКРАЛИ на числе ' + str(dobryak) + ' ' + content)
                 dobryak = 0
     elif message.channel.id in config['MEMES']:
-        if message.attachments:
+        if message.attachments or 'https://' in message.content:
             await message.create_thread(name='Обсуждение')
             await message.add_reaction('👍')
             await message.add_reaction('👎')
         else:
             await message.delete()
+    if message.author.id == 1018952778191745074 and config['FIRE-ENABLED']:
+        await message.add_reaction('🔥')
+    if (message.author.top_role.id == 1271043123492950036 or message.author.top_role.id == 1280889101175885969) and config['ADMIN-REACTIONS-ENABLED']:
+        await message.add_reaction('<:BASED:1285582754410533008>')
 
 
 @bot.event

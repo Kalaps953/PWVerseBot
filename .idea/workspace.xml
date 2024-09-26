@@ -4,7 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ab1df00e-1d44-4137-bd55-f32bfb770f2c" name="Changes" comment="Added unwire command">
+    <list default="true" id="ab1df00e-1d44-4137-bd55-f32bfb770f2c" name="Changes" comment="dobryak, 1984 in memes and yes">
+      <change afterPath="$PROJECT_DIR$/config_related.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/database_related.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/events.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/moderation.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/quality_of_life.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/config.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/database.db" beforeDir="false" afterPath="$PROJECT_DIR$/database.db" afterDir="false" />
@@ -42,6 +47,7 @@
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "master",
+    "last_opened_file_path": "C:/Users/arsen/OneDrive/Документы/Programming/python/PwVerseBot",
     "settings.editor.selected.configurable": "promo.database"
   }
 }]]></component>
@@ -152,7 +158,15 @@
       <option name="project" value="LOCAL" />
       <updated>1727179315968</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="dobryak, 1984 in memes and yes">
+      <option name="closed" value="true" />
+      <created>1727273256300</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1727273256300</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -161,6 +175,7 @@
     <MESSAGE value="Added ability to simply wire people to universities, create, delete. Need to add lists commands" />
     <MESSAGE value="Added list command with various args. Need to add count of dobryak strike and auto-changing of nicknames" />
     <MESSAGE value="Added unwire command" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added unwire command" />
+    <MESSAGE value="dobryak, 1984 in memes and yes" />
+    <option name="LAST_COMMIT_MESSAGE" value="dobryak, 1984 in memes and yes" />
   </component>
 </project>
