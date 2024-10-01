@@ -289,24 +289,36 @@ async def get_universes(ctx: ds.ApplicationContext,
                 SELECT id, name, owner_id, channel_id, state FROM Universes WHERE state = ?
                 ''', (state,))
         data = cursor.fetchall()
-        for i in range(len(data)):
-            univ = data[i]
-            title = f'{univ[1]}-{univ[0]}'
-            if univ[4] == 1:
-                title = '❄️-' + title
-            if univ[4] == -1:
-                title = '🛠️-' + title
-            embed = ds.Embed(
-                title=title,
-                description=f'<#{univ[3]}>'
-            ).set_author(name=ctx.guild.get_member(univ[2]).name,
-                         icon_url=ctx.guild.get_member(univ[2]).display_avatar.url)
-            if i == 0:
-                await ctx.respond(embed=embed)
-            else:
-                await ctx.send(embed=embed)
+
         if not data:
             await ctx.respond('Вселенных с таким параметром не найдено')
+        else:
+            await ctx.respond(embed=ds.Embed(title='Вселенные'))
+            print(len(data))
+            for i in range(len(data) // 24):
+                embed = ds.Embed(
+                )
+                for j in range(i * 24, (i + 1) * 24):
+                    univ = data[j]
+                    title = f'{univ[1]}-{num_to_str(univ[0])}'
+                    if univ[4] == 1:
+                        title = '❄️ ' + title
+                    if univ[4] == -1:
+                        title = '🛠️ ' + title
+                    print(len(f'Канал: <#{univ[3]}> \nВладелец: <@{univ[2]}>'))
+                    embed.add_field(name=title, value=f'Канал: <#{univ[3]}> \nВладелец: <@{univ[2]}>', inline=False)
+                await ctx.respond(embed=embed)
+            embed = ds.Embed()
+            for i in range((len(data) // 24) * 24, len(data) % 24 + (len(data) // 24) * 24):
+                univ = data[i]
+                title = f'{univ[1]}-{num_to_str(univ[0])}'
+                if univ[4] == 1:
+                    title = '❄️ ' + title
+                if univ[4] == -1:
+                    title = '🛠️ ' + title
+                print(len(f'Канал: <#{univ[3]}> \nВладелец: <@{univ[2]}>'))
+                embed.add_field(name=title, value=f'Канал: <#{univ[3]}> \nВладелец: <@{univ[2]}>', inline=False)
+            await ctx.respond(embed=embed)
     except Exception as error:
         print(error.with_traceback(error.__traceback__))
         await ctx.respond('Произошла ошибка')
@@ -317,9 +329,9 @@ async def get_universes(ctx: ds.ApplicationContext,
 @bot.event
 async def on_message(message: ds.Message):
     global connection, dobryak
-    if message.channel.id == 1276452159495340086 and config['ENTER-EXIT-REACTIONS-ENABLED']:
+    if message.channel.id == 1276452159495340086 and config['ENTER-EXIT-REACTIONS']:
         await message.add_reaction('<:SAJ:1276288176780218460>')
-    elif message.channel.id == 1276219202272886935 and config['ENTER-EXIT-REACTIONS-ENABLED']:
+    elif message.channel.id == 1276219202272886935 and config['ENTER-EXIT-REACTIONS']:
         await message.add_reaction('<:nyehehe:1276290044470104137>')
     if message.channel.id in config['DOBRYAK'] and config['DOBRYAK-ENABLED']:
         emojis = [['0️⃣', '⭕'], ['1️⃣', '🇮', '🕐'], ['2️⃣', '🥈'], ['3️⃣', '🥉'], ['4️⃣', '🍀'], ['5️⃣', '✋'], ['6️⃣', '🕕'],
@@ -409,14 +421,22 @@ async def on_member_update(before: ds.Member, after: ds.Member):
         ''', (after.id,))
         connection.commit()
         data = cursor.fetchone()
-        nick = after.nick
+        nick = after.display_name
+        print(nick)
         for i in range(1, len(data)):
             if data[i]:
-                nick += f'-[{data[i]}]'
-        ignore_next = True
+                nick += f' [{num_to_str(data[i])}]'
         await after.edit(nick=nick)
+        ignore_next = True
     if ignore_next:
         ignore_next = False
+
+
+def num_to_str(num: int):
+    num = str(num)
+    while len(num) < 3:
+        num = '0' + num
+    return num
 
 
 bot.run(config['TOKEN'])
